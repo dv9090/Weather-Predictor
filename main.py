@@ -6,20 +6,11 @@ base_url = "https://weather.com/weather/today/l/d14a70242c8d79bf622ef26e82a35eea
 
 #city = input("Enter your city that you want to check the weather for: ")
 
+html_text = requests.get(base_url).text
+soup = BeautifulSoup(html_text, 'lxml')
 
-def Weather_At():
-    response = requests.get(base_url)
+temperature = soup.find('span', class_='TodayDetailsCard--feelsLikeTempValue--8WgHV').text
+weather = soup.find('div', class_='CurrentConditions--phraseValue---VS-k').text
 
-    if response.status_code == 200:
-        print('Data retrieved successfully')
-        BeautifulSoup(response.text, 'html.parser')
-        
-
-    else:
-        print("Error fetching data from Weather.com API")
-
-
-
-    
-
-Weather_At()
+print(f"Current temperature: {temperature}")
+print(f"Current weather: {weather}")
