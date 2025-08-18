@@ -40,4 +40,4 @@ This project is a single HTML file and requires no complex setup.
 ## Acknowledgements
 
 * Weather data provided by [OpenWeatherMap](https://openweathermap.org).
-* Background images provided by [Unsplash](https://unsplash.com).
+* Background images provided by [Unsplash](https://unsplash.com) and other non copy right image from google.
