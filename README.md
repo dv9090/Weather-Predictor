@@ -29,9 +29,9 @@ This project is a single HTML file and requires no complex setup.
    * Open the `index.html` file.
    * Find the following line in the `<script>` section at the bottom:
      ```javascript
-     const openWeatherApiKey = "e7602e0a5cc41c486b812006b0bcfa5b";
+     const openWeatherApiKey = "Your API Key";
      ```
-   * Update `"openWeatherApiKey" for Data_ex and ` with your actual OpenWeatherMap API key.
+   * Update `"openWeatherApiKey" for Data_ex.py and index.html` with your actual OpenWeatherMap API key.
 
 3. **Run the Application:**
    * Simply open the `index.html` file in your web browser.
