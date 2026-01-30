@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        /* Added a smooth transition for the background image change */
+        transition: background-image 0.5s ease-in-out;
+      }
+      .weather-card {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-900 text-white flex items-center justify-center min-h-screen"
+    id="weather-background"
+    style="background-size: cover; background-position: center"
+  >
+    <div class="w-full max-w-md mx-auto">
+      <div
+        class="weather-card bg-gray-800 bg-opacity-50 rounded-2xl shadow-lg p-6 md:p-8"
+      >
+        <!-- Search Form -->
+        <form id="search-form" class="flex items-center justify-between mb-6">
+          <input
+            type="text"
+            id="city-input"
+            placeholder="Enter city name..."
+            class="w-full bg-transparent border-b-2 border-gray-400 focus:border-white focus:outline-none text-lg placeholder-gray-300 py-2"
+          />
+          <button
+            type="submit"
+            class="ml-4 bg-blue-500 hover:bg-blue-600 rounded-full p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Weather Information Display -->
+        <div id="weather-info" class="text-center hidden">
+          <h2 id="city-name" class="text-4xl font-bold mb-2"></h2>
+          <p id="weather-description" class="text-xl capitalize mb-4"></p>
+          <div
+            class="flex items-center justify-center text-6xl font-extrabold my-6"
+          >
+            <img
+              id="weather-icon"
+              src=""
+              alt="Weather Icon"
+              class="w-20 h-20 mr-4"
+            />
+            <span id="temperature"></span>
+          </div>
+          <div class="flex justify-around text-lg">
+            <div>
+              <p class="font-semibold">Humidity</p>
+              <p id="humidity"></p>
+            </div>
+            <div>
+              <p class="font-semibold">Wind Speed</p>
+              <p id="wind-speed"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div id="welcome-message" class="text-center py-12">
+          <h2 class="text-2xl font-semibold">Welcome to the Weather App</h2>
+          <p class="text-gray-300 mt-2">Enter a city to get started</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="text-center text-red-400 hidden mt-4">
+          <p>City not found. Please try again.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const openWeatherApiKey = "Your API Key";
+
+      const searchForm = document.getElementById("search-form");
+      const cityInput = document.getElementById("city-input");
+      const weatherInfo = document.getElementById("weather-info");
+      const welcomeMessage = document.getElementById("welcome-message");
+      const errorMessage = document.getElementById("error-message");
+      const cityNameEl = document.getElementById("city-name");
+      const weatherDescriptionEl = document.getElementById(
+        "weather-description"
+      );
+      const temperatureEl = document.getElementById("temperature");
+      const humidityEl = document.getElementById("humidity");
+      const windSpeedEl = document.getElementById("wind-speed");
+      const weatherIconEl = document.getElementById("weather-icon");
+      const weatherBackground = document.getElementById("weather-background");
+
+      // --- UPDATED SECTION ---
+      // A reliable map of weather conditions to specific, static image URLs.
+      const weatherImageMap = {
+        Clear:
+          "https://media.istockphoto.com/id/476263042/photo/fluffy-clouds-in-the-sky.jpg?s=612x612&w=0&k=20&c=XcNQ8dq2FhC518Ef1hkOwrblUz5GxVhBo-AYuHV6fFI=",
+        Clouds:
+          "https://images.unsplash.com/photo-1682946688922-39fb6a12c38c?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Rain: "https://images.unsplash.com/photo-1638471120388-0ac73e8fe44c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Drizzle:
+          "https://plus.unsplash.com/premium_photo-1664303017917-71ebeb42343d?q=80&w=1073&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+
+        Thunderstorm:
+          "https://images.unsplash.com/photo-1739134505320-6c52d19d0f30?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Snow: "https://images.unsplash.com/photo-1644716276377-59d4908d3729?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Mist: "https://images.unsplash.com/photo-1582076198523-57cea81a1baa?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Smoke:
+          "https://images.unsplash.com/photo-1599392287818-b74d71099aee?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Haze: "https://images.unsplash.com/photo-1599059021750-82716ae2b661?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Dust: "https://images.unsplash.com/photo-1693711836001-99859bb7185a?q=80&w=1557&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Fog: "https://images.unsplash.com/photo-1637606988694-0c56b855eb60?q=80&w=1526&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Sand: "https://images.unsplash.com/photo-1653515906278-1276dfe492af?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Ash: "https://images.unsplash.com/photo-1603807198164-398835261ea3?w=1600",
+        Squall:
+          "https://images.unsplash.com/photo-1572312302337-1379d0fd54f8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Tornado:
+          "https://images.unsplash.com/photo-1696831388415-c9439da22a87?q=80&w=1207&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        Default:
+          "https://www.maximum-inc.com/wp-content/uploads/2022/01/Meteorology.jpeg",
+      };
+
+      searchForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const city = cityInput.value.trim();
+        if (city) {
+          getWeather(city);
+        }
+      });
+
+      async function getWeather(city) {
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${openWeatherApiKey}&units=metric`;
+
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) {
+            throw new Error("City not found");
+          }
+          const data = await response.json();
+          displayWeather(data);
+          updateBackgroundImage(data.weather[0].main);
+        } catch (error) {
+          showError();
+        }
+      }
+
+      function displayWeather(data) {
+        welcomeMessage.classList.add("hidden");
+        errorMessage.classList.add("hidden");
+        weatherInfo.classList.remove("hidden");
+
+        cityNameEl.textContent = data.name;
+        weatherDescriptionEl.textContent = data.weather[0].description;
+        temperatureEl.textContent = `${Math.round(data.main.temp)}°C`;
+        humidityEl.textContent = `${data.main.humidity}%`;
+        windSpeedEl.textContent = `${data.wind.speed} m/s`;
+        weatherIconEl.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+      }
+
+      function showError() {
+        welcomeMessage.classList.add("hidden");
+        weatherInfo.classList.add("hidden");
+        errorMessage.classList.remove("hidden");
+      }
+
+      // --- UPDATED FUNCTION: Now uses the static image map ---
+      function updateBackgroundImage(weatherCondition) {
+        // Get the image URL from our map, or use the default if not found
+        const imageUrl =
+          weatherImageMap[weatherCondition] || weatherImageMap["Default"];
+
+        // Preload the image to ensure it's loaded before changing the background
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = () => {
+          weatherBackground.style.backgroundImage = `url('${imageUrl}')`;
+        };
+        img.onerror = () => {
+          // Fallback to a simple placeholder if a static link ever fails
+          weatherBackground.style.backgroundImage = `url('https://placehold.co/1600x900/000000/FFFFFF?text=Image+Not+Found')`;
+        };
+      }
+    </script>
+  </body>
+</html>
